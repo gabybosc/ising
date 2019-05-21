@@ -1,52 +1,63 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from funciones import find_nearest, num_func_corr
+from funciones import find_nearest, func_corr
 plt.ion()
-"""
-veamos la diferencia entre dos puntos consecutivos: si es nula, es que no aceptó, si es no nula es que sí aceptó.
-"""
 
-datos = np.loadtxt('importance_sampling_deltas_0_3.txt', skiprows=2)
+datos = np.loadtxt('importance_sampling_deltas_0_10.txt', skiprows=2)
 delta = datos[:,0]
-paso = np.abs(delta[0] - delta[1])
-aceptacion = np.zeros(len(delta))
+paso_delta = np.abs(delta[0] - delta[1])
+n_serie = len(datos[0,:])-1
 
+
+# Aceptacion en funcion de deltas entre 0 y 10
+
+aceptacion = np.zeros(len(delta))
 for i in range(len(delta)):
-    for j in range(len(datos[i,:])-1):
+    for j in range(n_serie):
         if datos[i, j] - datos[i, j+1] != 0:
             aceptacion[i] = aceptacion[i] +1
-
-aceptacion = aceptacion /100 #asi ya esta en porcentaje
+aceptacion = aceptacion*100/n_serie #asi ya esta en porcentaje
 idx = np.where(aceptacion == find_nearest(aceptacion, 50))[0][0] #donde la acpetacion es 50%
 
-delta_critico = delta[idx]
+plt.figure(1)
+plt.plot(delta, aceptacion)
+plt.plot(delta[idx],aceptacion[idx],'ro',label='$\delta$ critico')
+plt.xlabel('$\delta$')
+plt.ylabel('% aceptacion')
+plt.title('Aceptación para un paso entre deltas de {}'.format(paso_delta))
+plt.legend()
+plt.grid()
+
+
+# Funcion correlacion para algunos deltas
+
+delta_inicio = 1
+delta_fin = 6
+n_deltas = 10
+
+ni = np.where(delta == find_nearest(delta, delta_inicio))[0][0]
+nf = np.where(delta == find_nearest(delta, delta_fin))[0][0]
 
 k_max = 20
 ks = np.arange(0,k_max,1)
+paso = 100 # longitud de las tiras sobre las que promediamos
+inicio = 500 # Si queremos termalizar, sino poner 0
+fin = len(datos[0,1:])
 
-for indice in np.arange(100,1000,100): # loop deltas
-    x_N = datos[indice,:]
+for indice in np.arange(ni,nf,int(round((nf-ni)/n_deltas))): # loop para algunos deltas
+    x_N = datos[indice,1:]
     # para cada delta, separar la tira de x en tiras mas cortas y hacer un promedio sobre ellas
-    paso = 100
-    inicio = 500 # Si queremos termalizar, sino poner 0
-    fin = len(datos[0,1:])
     ck = np.zeros(len(ks))
-    for j in np.arange(inicio,fin,paso):
+    for j in np.arange(inicio,fin,paso): # loop para subtiras de x_N
         x = x_N[j:j+paso]
         for i,k in enumerate(ks): # inicio loop k
-            corr = num_func_corr(x, k) #el primer termino del numerador de la función correlacion
-            numerador = corr - np.mean(x)**2 #corregir el mean
-            denominador = np.std(x) #corregir la std (mejro que haga todo directamene en la funcion)
-            ck[i] = ck[i] + numerador/denominador
-
+            corr = func_corr(x, k)
+            ck[i] = ck[i] + corr
     ck_mean = ck/((fin-inicio)/paso)
     plt.plot(ks, ck_mean, label='delta = {}'.format(delta[indice]))
 plt.xlabel('k')
 plt.ylabel('C(k)')
 plt.title('Correlacion')
 plt.legend()
-# plt.figure(1)
-# plt.plot(delta, aceptacion)
-# plt.xlabel('delta')
-# plt.ylabel('porcentaje de acpetacion')
-# plt.title('Aceptación para un paso entre deltas de {}'.format(paso))
+plt.grid()
+

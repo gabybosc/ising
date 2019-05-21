@@ -78,14 +78,17 @@ def find_nearest_final(array,value): #el valor más cercano pero más chico
     return array[idx]
 
 
-def num_func_corr(x, k): #devuelve sólo el numerador de la función correlacion, después hay que restarle np.meanx ^2 y dividir por la std
+def func_corr(x, k): 
     # x es la cadena de markov
     N = len(x)
     media = 0
     for i in range(N-k):
         media = media + (x[i+k] * x[i])
+    media = media/(N-k)
+    numerador = media - np.mean(x[:N-k])**2
+    denominador = np.std(x[:N-k])**2
 
-    return(media/(N-k))
+    return(numerador/denominador)
 
 
 def hodograma(B1, B2, B3, unidad, titulo): #, dia):
