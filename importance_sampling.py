@@ -21,10 +21,11 @@ idx = np.where(aceptacion == find_nearest(aceptacion, 50))[0][0] #donde la acpet
 
 plt.figure(1)
 plt.plot(delta, aceptacion)
-plt.plot(delta[idx],aceptacion[idx],'ro',label='$\delta$ critico')
+plt.plot(delta[idx],aceptacion[idx],'ro',label='$\delta$ = {}'.format(delta[idx]))
 plt.xlabel('$\delta$')
 plt.ylabel('% aceptacion')
 plt.title('Aceptación para un paso entre deltas de {}'.format(paso_delta))
+plt.ylim([0,100])
 plt.legend()
 plt.grid()
 
@@ -60,4 +61,20 @@ plt.ylabel('C(k)')
 plt.title('Correlacion')
 plt.legend()
 plt.grid()
+
+
+# Calculo de la integral (Creo que debe dar sqrt(2pi) )
+print(np.sqrt(2*np.pi))
+term = 100
+size = len(datos[idx,1:])
+
+# que se usa como dx??? opcion: ordenar el vector x y usar diferencias entre pasos consecutivos
+#dx = delta[idx]
+dx = 0.01
+
+sum = 0
+for x in datos[idx,1:]:
+    x2 = x**2
+    sum = sum + x2 * np.exp(-x2/2) * dx
+print(sum)
 
