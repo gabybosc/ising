@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from funciones import find_nearest, func_corr
+from scipy.integrate import simps, trapz
 plt.ion()
 
-datos = np.loadtxt('importance_sampling_deltas_0_10.txt', skiprows=2)
+datos = np.loadtxt('../../computacional/datos/importance_sampling_deltas_0_10.txt', skiprows=2)
 delta = datos[:,0]
 paso_delta = np.abs(delta[0] - delta[1])
 n_serie = len(datos[0,:])-1
@@ -45,6 +46,7 @@ paso = 100 # longitud de las tiras sobre las que promediamos
 inicio = 500 # Si queremos termalizar, sino poner 0
 fin = len(datos[0,1:])
 
+plt.figure()
 for indice in np.arange(ni,nf,int(round((nf-ni)/n_deltas))): # loop para algunos deltas
     x_N = datos[indice,1:]
     # para cada delta, separar la tira de x en tiras mas cortas y hacer un promedio sobre ellas
@@ -64,17 +66,11 @@ plt.grid()
 
 
 # Calculo de la integral (Creo que debe dar sqrt(2pi) )
-print(np.sqrt(2*np.pi))
 term = 100
-size = len(datos[idx,1:])
-
+x = datos[idx, term:]
+x.sort()
+y = x**2 * np.exp(-x**2/2)
+print('Si hacemos la integral, nos da I - 2pi = {}'.format(trapz(y,x)- np.sqrt(2*np.pi)))
+print('Si sumamos, nos da I - 2pi = {}'.format(np.sum(x**2)/len(x) - 1))
 # que se usa como dx??? opcion: ordenar el vector x y usar diferencias entre pasos consecutivos
 #dx = delta[idx]
-dx = 0.01
-
-sum = 0
-for x in datos[idx,1:]:
-    x2 = x**2
-    sum = sum + x2 * np.exp(-x2/2) * dx
-print(sum)
-

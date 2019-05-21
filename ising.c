@@ -30,7 +30,7 @@ int main(){
 
 
 	char fn[100];
-	sprintf(fn,"importance_sampling_deltas_0_3.txt");
+	sprintf(fn,"/home/gabybosc/computacional/datos/importance_sampling_deltas_0_10.txt");
 	fp = fopen(fn, "w");
 	fprintf(fp, "delta; serie de %d pasos", N);
 
