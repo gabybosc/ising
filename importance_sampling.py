@@ -78,23 +78,29 @@ plt.grid()
 
 # Calculo de la integral (Creo que debe dar sqrt(2pi) )
 datos_integral = np.loadtxt('../../computacional/datos/importance_sampling_integral.txt')
-x_diezmado = np.array([datos_integral[4*i] for i in range(int(len(datos_integral)/4))])
+k = 3
+for k in [1,4]:
+    x_diezmado = np.array([datos_integral[k*i] for i in range(int(len(datos_integral)/k))])
 
-tamanios = range(1000, len(x_diezmado), 500)
-termal = range(0, 900, 100)
-matriz = np.zeros((len(tamanios), len(termal)))
-plt.figure()
-for i,N in enumerate(tamanios):
-    for j,term in enumerate(termal):
-        x = x_diezmado[term:N]
-        # x.sort()
-        # y = x**2 * np.exp(-x**2/2)
-        # I = trapz(y,x)- np.sqrt(2*np.pi)
-        I = np.sum(x**2)/len(x) - 1
-        matriz[i,j] = I
-    plt.plot(termal,matriz[i,:],label=tamanios[i])
-
-plt.legend()
+    tamanios = np.linspace(1000, len(x_diezmado), 10)
+    tamanios = np.array([int(tamanio) for tamanio in tamanios])
+    termal = range(0, 900, 100)
+    matriz = np.zeros((len(tamanios), len(termal)))
+    plt.figure()
+    for i,N in enumerate(tamanios):
+        for j,term in enumerate(termal):
+            x = x_diezmado[term:N]
+            # x.sort()
+            # y = x**2 * np.exp(-x**2/2)
+            # I = trapz(y,x)- np.sqrt(2*np.pi)
+            I = np.sum(x**2)/len(x) - 1
+            matriz[i,j] = I
+        plt.plot(termal,matriz[i,:],label=tamanios[i])
+    plt.xlabel('pasos de termalizacion')
+    plt.ylabel('Integral - 1')
+    plt.ylim([-0.05, 0.05])
+    plt.title('para diezmar con k = {}'.format(k))
+    plt.legend()
 
 """si hacemos esto pero sin diezmar los x, nos da mal, creemos que es instructivo poner el grafiquito malo para mostrar que efectivamente cambia si no consideramos la correlacion."""
 
