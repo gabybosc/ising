@@ -7,7 +7,7 @@
 #define B 1
 #define J 0
 #define PASO 1
-#define SIZE 10
+#define SIZE 4
 
 int poblar(int *red);
 int flipear(int *red, int *magnetizacion);
@@ -15,27 +15,27 @@ int imprimir(int *red);
 
 //------------MAIN-------------
 int main(){
+	// Para cada temperatura (o B) calculamos la magnetizacion para SIZE pasos descorrelacionados
 	// FILE *fp;
 	int *red, *magnetizacion, j;
 	red = (int*)malloc(N*N*sizeof(int));
-	magnetizacion = (int*)malloc((SIZE)*sizeof(int)); //habria que escribir un calloc
+	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	srand(time(NULL));
 
 	poblar(red);
+	printf("Red inicial:\n");
 	imprimir(red);
-	*magnetizacion = 0;
 
 	for (j = 0; j < N*N; j++){
 		*magnetizacion += *(red+j);
 	}
-	printf("M0 = %d\n", *magnetizacion);
 
 	flipear(red, magnetizacion);
-	printf("nueva red\n");
+	printf("Red nueva:\n");
 	imprimir(red);
-	printf("mag \n");
-	for(j = 0; j< 3; j++){
-		printf("%d ", *(magnetizacion+j));
+	printf("M =");
+	for(j = 0; j<SIZE; j++){
+		printf(" %d", *(magnetizacion+j));
 	}
 	printf("\n");
 
@@ -72,38 +72,30 @@ return 0;
 
 int flipear(int *red, int *magnetizacion){
 //flipea un s_inicial a un s_final. Si la energía baja, lo acepta. Si aumenta, lo acepta con una proba P.
-	int si,i,j; //si = s en el lugar i
+	int si,i,j,k; //si = s en el lugar i
 	float P, random;
 	double delta_E;
-	int delta_mag;
+	int delta_mag = 0;
+	
+	for (j = 1; j < SIZE; j++){
+		for (k = 0; k < 10; k++){
+			for (i = 0; i < N*N; i++){
+				random = (float)rand()/(float)RAND_MAX;
+				si = *(red+i);
+				delta_E = 2 * B *si;
+				P = exp(-delta_E); //proba de aceptar
 
-	delta_mag = 0;
-
-	for (i = 1; i < SIZE*10*N*N; i++){
-		random = (float)rand()/(float)RAND_MAX;
-		si = *(red+i);
-		delta_E = 2 * B *si;
-		P = exp(-delta_E); //proba de aceptar
-
-		if(delta_E < 0){
-			*(red+i) = -si;
-			delta_mag -= 2*si;
-			printf("delta mag para delta_E<0 %d\n", delta_mag);
+				if(delta_E < 0){
+					*(red+i) = -si;
+					delta_mag -= 2*si;
+				}
+				else if(random < P){
+					*(red+i) = -si;
+					delta_mag -= 2*si;
+				}
+			}
 		}
-		else if(random < P){
-			*(red+i) = -si;
-			delta_mag -= 2*si;
-			printf("si random %d\n", delta_mag);
-		}
-		// else{
-		// 	delta_mag += 0;
-		// }
-
-		if(i % (10*N*N) == 0){
-			j = i / (10*N*N);
-			*(magnetizacion+j) = *(magnetizacion) + delta_mag;
-			printf("deltamag %d\n", delta_mag);
-		}
+		*(magnetizacion+j) = *magnetizacion + delta_mag;
 	}
 
 return 0;
