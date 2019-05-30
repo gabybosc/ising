@@ -7,7 +7,7 @@
 #define B 1
 #define J 0
 #define PASO 1
-#define SIZE 4
+#define SIZE 2
 
 int poblar(int *red);
 int flipear(int *red, int *magnetizacion);
@@ -47,6 +47,7 @@ int main(){
 	// sprintf(fn,"/home/gabybosc/computacional/datos/nombredelarchivo.txt");
 	// fp = fopen(fn, "w"); //"a" es append, mientras que "w" sobreescribe
 	free(red);
+	free(magnetizacion);
 
 return 0;
 }
@@ -70,33 +71,32 @@ return 0;
 }
 
 
-int flipear(int *red, int *magnetizacion){
+int flipear(int *red, int *magnetizacion){ //hacerlo de forma secuencial nos puede traer problemas para T bajas
 //flipea un s_inicial a un s_final. Si la energía baja, lo acepta. Si aumenta, lo acepta con una proba P.
-	int si,i,j,k; //si = s en el lugar i
+	int si,i,j,l; //si = s en el lugar i
 	float P, random;
 	double delta_E;
 	int delta_mag = 0;
-	
-	for (j = 1; j < SIZE; j++){
-		for (k = 0; k < 10; k++){
-			for (i = 0; i < N*N; i++){
-				random = (float)rand()/(float)RAND_MAX;
-				si = *(red+i);
-				delta_E = 2 * B *si;
-				P = exp(-delta_E); //proba de aceptar
 
-				if(delta_E < 0){
-					*(red+i) = -si;
-					delta_mag -= 2*si;
-				}
-				else if(random < P){
-					*(red+i) = -si;
-					delta_mag -= 2*si;
-				}
+	for (j = 1; j < SIZE; j++){
+		for (l = 0; l < PASO*N*N; l++){
+			random = (float)rand()/(float)RAND_MAX;
+			i = ((float)rand()/(float)RAND_MAX)* N*N;
+			si = *(red+i);
+			delta_E = 2 * B *si;
+			P = exp(-delta_E); //proba de aceptar
+
+			if(delta_E < 0){
+				*(red+i) = -si;
+				delta_mag -= 2*si;
 			}
-		}
-		*(magnetizacion+j) = *magnetizacion + delta_mag;
-	}
+			else if(random < P){
+				*(red+i) = -si;
+				delta_mag -= 2*si;
+			}
+		}//cierra el loop en l
+	*(magnetizacion+j) = *magnetizacion + delta_mag;
+	}//cierra el loop en j
 
 return 0;
 }
