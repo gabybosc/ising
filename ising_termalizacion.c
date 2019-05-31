@@ -3,14 +3,14 @@
 #include <math.h>
 #include <time.h>
 
-#define N 32 	// lado de la red
-#define B 0.5	// campo magnetico
+//#define B 0.5	// campo magnetico
+#define N 32
 #define J 0		// interaccion entre particulas
 #define PASO 1 	// descorrelacion: PASO*SIZE*N^2
-#define SIZE 10 	// tamanio de vectores diezmados
+#define SIZE 100 	// tamanio de vectores diezmados
 
 int poblar(int *red);
-int flipear(int *red, int *magnetizacion);
+int flipear(int *red, int *magnetizacion, float B);
 int imprimir(int *red);
 
 //------------MAIN-------------
@@ -19,28 +19,30 @@ int main(){
 	FILE *fp;
 	char fn[30];
 	int *red, *magnetizacion, j;
+	float B;
 	red = (int*)malloc(N*N*sizeof(int));
 	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	srand(time(NULL));
 
 	sprintf(fn,"termalizacion.txt");
 	fp = fopen(fn, "w"); //"a" es append, mientras que "w" sobreescribe
-	fprintf(fp,"Magnetizaciones por sitio; lado %d; B=%f; J=%d \n",N,B,J);
-	fprintf(fp,"Iteraciones totales = N^2 * %d * %d \n",SIZE,PASO);
+	fprintf(fp,"Delta_iteraciones=%d**2*%d\tJ=%d\n",N,PASO,J);
+	fprintf(fp,"B\tmagnetizacion por sitio");
+	
+	for (B = 0.2; B <3; B+=0.2){
+		poblar(red);
 
-	poblar(red);
+		*magnetizacion = 0; //esta linea sirve si hacemos un loop en termperaturas (si no loopea, no hace nada)
+		for (j = 0; j < N*N; j++){
+			*magnetizacion += *(red+j);
+		}
 
-	*magnetizacion = 0; //esta linea sirve si hacemos un loop en termperaturas (si no loopea, no hace nada)
-	for (j = 0; j < N*N; j++){
-		*magnetizacion += *(red+j);
+		flipear(red, magnetizacion, B);
+		fprintf(fp,"\n%f",B);
+		for(j = 0; j<SIZE; j++){
+			fprintf(fp,"\t%f", (float)*(magnetizacion+j)/(float)(N*N));
+		}
 	}
-
-	flipear(red, magnetizacion);
-
-	for(j = 0; j<SIZE; j++){
-		fprintf(fp," %f", (float)*(magnetizacion+j)/(float)(N*N));
-	}
-
 	free(red);
 	free(magnetizacion);
 	fclose(fp);
@@ -67,7 +69,7 @@ return 0;
 }
 
 
-int flipear(int *red, int *magnetizacion){
+int flipear(int *red, int *magnetizacion, float B){
 //flipea un s_inicial a un s_final. Si la energía baja, lo acepta. Si aumenta, lo acepta con una proba P.
 	int si,i,j,l; //si = s en el lugar i
 	float P, random;
