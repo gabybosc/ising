@@ -3,46 +3,51 @@
 #include <math.h>
 #include <time.h>
 
-#define N 5 	// lado de la red
-#define B 1 	// campo magnetico
+//#define B 20 	// campo magnetico
+#define N 32 	// lado de la red
 #define J 0 	// interaccion entre particulas
 #define PASO 1 	// descorrelacion: PASO*SIZE*N^2
-#define SIZE 4 	// tamanio de vectores diezmados
+#define SIZE 10000 	// tamanio de vectores diezmados
+#define TERM 10000	// pasos de termalizacion
 
 int poblar(int *red);
-int flipear(int *red, int *magnetizacion);
+int flipear(int *red, int *magnetizacion, float B);
 int imprimir(int *red);
 
 //------------MAIN-------------
 int main(){
 	// Para cada temperatura (o B) calculamos la magnetizacion para SIZE pasos descorrelacionados
-	// FILE *fp;
-	int *red, *magnetizacion, j;
-	float mean_mag;
+	FILE *fp;
+	char fn[30];
+	int *red, *magnetizacion, j, j_min;
+	float mean_mag,B;
 	red = (int*)malloc(N*N*sizeof(int));
 	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	srand(time(NULL));
-
-	poblar(red);
-
-	for (j = 0; j < N*N; j++){
-		*magnetizacion += *(red+j);
+	j_min = TERM/(PASO*N*N);
+	
+	sprintf(fn,"magnetizacion_vs_B.txt");
+	fp = fopen(fn, "w"); //"a" es append, mientras que "w" sobreescribe
+	fprintf(fp,"Delta_iteraciones=%d**2*%d\tJ=%d\n",N,PASO,J);
+	fprintf(fp,"B\tm");
+	
+	for (B = 0.2; B <5; B+=0.2){
+		poblar(red);
+		*magnetizacion = 0;
+		for (j = 0; j < N*N; j++){
+			*magnetizacion += *(red+j);
+		}
+		
+		flipear(red, magnetizacion, B);
+		
+		mean_mag = 0;
+		for(j = j_min; j<SIZE; j++){
+			mean_mag += *(magnetizacion+j);
+		}
+		mean_mag = mean_mag/((SIZE-j_min)*N*N);
+		fprintf(fp,"\n%f\t%f",B,mean_mag);
+		// ham = -B * (float)s/PASO;
 	}
-
-	flipear(red, magnetizacion);
-
-	mean_mag = 0;
-	for(j = 0; j<SIZE; j++){
-		mean_mag += *(magnetizacion+j);
-	}
-	mean_mag = mean_mag/SIZE;
-	printf("Mag media = %f \n",mean_mag);
-
-	// ham = -B * (float)s/PASO;
-	// mag = (float)s/PASO;
-	// printf("%f %f\n",ham, mag);
-	// sprintf(fn,"/home/gabybosc/computacional/datos/nombredelarchivo.txt");
-	// fp = fopen(fn, "w"); //"a" es append, mientras que "w" sobreescribe
 	free(red);
 	free(magnetizacion);
 return 0;
@@ -67,7 +72,7 @@ return 0;
 }
 
 
-int flipear(int *red, int *magnetizacion){
+int flipear(int *red, int *magnetizacion, float B){
 //flipea un s_inicial a un s_final. Si la energía baja, lo acepta. Si aumenta, lo acepta con una proba P.
 	int si,i,j,l; //si = s en el lugar i
 	float P, random;
