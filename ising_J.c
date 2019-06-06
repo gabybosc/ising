@@ -3,7 +3,7 @@
 #include <math.h>
 #include <time.h>
 
-#define N 16
+#define N 5
 #define B 0
 #define J 0.1
 #define PASO 1
@@ -18,7 +18,7 @@ int calculo_energia(int *red, float *energia);
 
 //------------MAIN-------------
 int main(){
-	// Para cada temperatura (o B) calculamos la magnetizacion para SIZE pasos descorrelacionados
+	// Para cada temperatura calculamos los observables para SIZE pasos descorrelacionados
 	// FILE *fp;
 	int *red, *magnetizacion, j;
 	float *energia;
