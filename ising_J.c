@@ -168,3 +168,27 @@ int calculo_energia(int *red, float *energia){
 	// printf("hamilt = %f\n", *energia);
 	return(0);
 }
+
+float func_corr(float *x, int k){
+	//x es la cadena de markov de longitud SIZE
+	int i;
+	float media = 0;
+	float media_x = 0;
+	float media_sqx = 0;
+	float numerador,denominador;
+	
+	for (i=0; i<(SIZE-k); i++){
+		media = media + (*(x+i+k) * *(x+i)); //valor medio de x(i)*x(i+k)
+		media_x = media_x + *(x+i); 		// valor medio de x
+		media_sqx = media_sqx + pow(*(x+i),2); //valor medio de x^2
+	}
+	media = media/(SIZE-k);
+	media_x = media_x/(SIZE-k);
+	media_x = pow(media_x,2);	// OJO! Ahora media_x es (mean(x))**2
+	media_sqx = media_sqx/(SIZE-k);
+	
+	numerador = media - media_x;
+	denominador = media_sqx - media_x;
+
+return(numerador/denominador);
+}
