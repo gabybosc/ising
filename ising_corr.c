@@ -4,7 +4,7 @@
 #include <time.h>
 
 #define N 32
-#define B 0
+#define B 0.0
 #define J 0.01
 #define SIZE 2000000
 
@@ -60,7 +60,7 @@ int main(){ //(int argc,char *argv[])
 	for (k=0; k<k_max; k++){
 		*(correlacion+k) = 0;
 	}
-	for (i=0; i<cant_tiras; i++){ //loop de sobre las tiras
+	for (i=0; i<(cant_tiras-1); i++){ //loop de sobre las tiras
 		for (j=0; j<n_tira; j++){ //armo la tira corta
 			*(x+j) = *(magnetizacion + termalizacion + i*n_tira + j);
 		}
@@ -69,7 +69,7 @@ int main(){ //(int argc,char *argv[])
 		}
 	}
 	for (k=0; k<k_max; k++){ // hago el promedio
-		*(correlacion+k) = *(correlacion+k)/cant_tiras;
+		*(correlacion+k) = *(correlacion+k)/(cant_tiras-1);
 	}
 	for(k=0; k<k_max; k++){//k loop para imprimir correlacion
 		fprintf(fp, "%f ",*(correlacion+k));
@@ -80,7 +80,7 @@ int main(){ //(int argc,char *argv[])
 	for (k=0; k<k_max; k++){
 		*(correlacion+k) = 0;
 	}
-	for (i=0; i<cant_tiras; i++){ //loop de sobre las tiras
+	for (i=0; i<(cant_tiras-1); i++){ //loop de sobre las tiras
 		for (j=0; j<n_tira; j++){ //armo la tira corta
 			*(x+j) = *(energia + termalizacion + i*n_tira + j);
 		}
@@ -89,7 +89,7 @@ int main(){ //(int argc,char *argv[])
 		}
 	}
 	for (k=0; k<k_max; k++){ // hago el promedio
-		*(correlacion+k) = *(correlacion+k)/cant_tiras;
+		*(correlacion+k) = *(correlacion+k)/(cant_tiras-1);
 	}
 	for(k=0; k<k_max; k++){//k loop para imprimir correlacion
 		fprintf(fp, "%f ",*(correlacion+k));
