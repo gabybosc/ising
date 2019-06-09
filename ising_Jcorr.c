@@ -3,39 +3,42 @@
 #include <math.h>
 #include <time.h>
 
-#define N 5
+#define N 32
 #define B 0
 #define J 0.1
-#define PASO 1
-#define SIZE 10000
+#define SIZE 1000000
 
 int poblar(int *red);
 int flipear(int *red, int *magnetizacion, float *energia);
 int imprimir(int *red);
 int sumar_sj(int *red, int i);
 int calculo_energia(int *red, float *energia);
-float func_corr(float *x, int k);
+float func_corr(float *x, int n, int k);
 
 
 //------------MAIN-------------
 int main(){
 	// Para cada temperatura calculamos los observables para SIZE pasos correlacionados
+	srand(time(NULL));
+
 	FILE *fp;
-	int *red, *magnetizacion, j,k,l,m;
-	float *energia;
+	int *red, *magnetizacion, i,j,k;
+	float *energia, *correlacion;
 	red = (int*)malloc(N*N*sizeof(int));
 	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	energia = malloc(SIZE* sizeof(float));
-	srand(time(NULL));
 
-	float *correlacion;
-	correlacion = malloc(30* sizeof(float)); // correlacion para k=0:30
+	int k_max = 2000;
+	correlacion = malloc(k_max* sizeof(float)); // correlacion para k=0:30
 
 	//correlacion sobre 450 tiras de 200 numeros (luego de 10% pasos de termalizacion)
-	int n_tira = 200;
-	int cant_tiras = (SIZE-(SIZE/10))/n_tira;
-	float x_e[n_tira];
-	int x_m[n_tira];
+	int n_tira = 10000;
+	int termalizacion = 10000;
+	int cant_tiras = (SIZE-termalizacion)/n_tira;
+	float *x_e;
+	//int *x_m;
+	x_e = malloc(n_tira * sizeof(float));
+	//x_m = malloc(n_tira * sizeof(int));
 
 	char fn[50];
 	sprintf(fn,"ising_Jcorrelacion.txt");
@@ -54,21 +57,38 @@ int main(){
 	// OJO: en correlacion, funcion flipear cambia para guardar todos los pasos
 	flipear(red, magnetizacion, energia);
 
-	//printf("Mag i = %d\nMag f = %d\nEi = %f\nEf = %f\n",*magnetizacion,*(magnetizacion+SIZE-1),*energia,*(energia+SIZE-1));
-
-	for(k=0; k<30; k++){//k loop para correlacion
+	/* // FORMA 1 DE PROMEDIAR LA CORRELACION
+	for(k=0; k<k_max; k++){//k loop para correlacion
 		*(correlacion+k) = 0;
-		for (l=0; l<cant_tiras;l++){//loop para promediar sobre tiras
+		for (l=0; l<(cant_tiras-1);l++){//loop para promediar sobre tiras
 			for (m=0; m<n_tira; m++){
-				x_e[m] = *(energia+(SIZE/10)+l*n_tira+m);
-				//tiras de energia luego de SIZE/10 pasos de termalizacion, de long n_tira
-			}//cierra el loop en m
-			*(correlacion+k) += func_corr(x_e,k); //hacerlo tambien para x_m?
-		}//cierra el loop en l
-		*(correlacion+k) = *(correlacion+k)/cant_tiras;
+				*(x_e+m) = (float)*(magnetizacion+termalizacion+l*n_tira+m);
+				//tiras de energia luego de pasos de termalizacion, de long n_tira
+			}
+			*(correlacion+k) += func_corr(x_e,n_tira,k); //hacerlo tambien para x_m?
+		}
+		*(correlacion+k) = *(correlacion+k)/(cant_tiras-1);
 	}//end loop k
+	*/
 
-	for(k=0; k<30; k++){//k loop para imprimir correlacion
+	// FORMA 2 DE PROMEDIAR LA CORRELACION
+	for (k=0; k<k_max; k++){
+		*(correlacion+k) = 0;
+	}
+
+	for (i=0; i<cant_tiras; i++){ //loop de sobre las tiras
+		for (j=0; j<n_tira; j++){ //armo la tira corta
+			*(x_e+j) = *(magnetizacion + termalizacion + i*n_tira + j);
+		}
+		for (k=0; k<k_max; k++){ //para cada tira corta, calculo la correlacion para todos los k
+			*(correlacion+k) += func_corr(x_e,n_tira,k);
+		}
+	}
+	for (k=0; k<k_max; k++){
+		*(correlacion+k) = *(correlacion+k)/cant_tiras;
+	}
+
+	for(k=0; k<k_max; k++){//k loop para imprimir correlacion
 		fprintf(fp, "\n%d\t%f",k,*(correlacion+k));
 	}//cierra el loop para imprimir
 
@@ -76,6 +96,7 @@ int main(){
 	free(magnetizacion);
 	free(energia);
 	free(correlacion);
+	free(x_e);
 	fclose(fp);
 return 0;
 }
@@ -160,8 +181,9 @@ int flipear(int *red, int *magnetizacion, float *energia){ //hacerlo de forma se
 		else if(random < P){
 			*(red+i) = -si;
 			delta_mag -= 2*si;
-		}else{ //revisar esto! Si no flipea, no cambia la energia ni la magnetizacion
-			delta_mag = 0;
+		}
+		else{ //revisar esto! Si no flipea, no cambia la energia ni la magnetizacion
+			//delta_mag = 0;
 			delta_E = 0;
 		}
 		*(energia+j) = *(energia+(j-1)) + delta_E;
@@ -195,23 +217,24 @@ int calculo_energia(int *red, float *energia){
 	return(0);
 }
 
-float func_corr(float *x, int k){
-	//x es la cadena de markov de longitud SIZE
+
+float func_corr(float *x, int n, int k){
+	//x es la cadena de markov de longitud n
 	int i;
 	float media = 0;
 	float media_x = 0;
 	float media_sqx = 0;
 	float numerador,denominador;
 
-	for (i=0; i<(SIZE-k); i++){
-		media = media + (*(x+i+k) * *(x+i)); //valor medio de x(i)*x(i+k)
-		media_x = media_x + *(x+i); 		// valor medio de x
-		media_sqx = media_sqx + pow(*(x+i),2); //valor medio de x^2
+	for (i=0; i<(n-k); i++){
+		media += *(x+i+k) * *(x+i); //valor medio de x(i)*x(i+k)
+		media_x += *(x+i); 		// valor medio de x
+		media_sqx += pow(*(x+i),2); //valor medio de x^2
 	}//cierra el loop en i
-	media = media/(SIZE-k);
-	media_x = media_x/(SIZE-k);
+	media = media/(n-k);
+	media_x = media_x/(n-k);
 	media_x = pow(media_x,2);	// OJO! Ahora media_x es (mean(x))**2
-	media_sqx = media_sqx/(SIZE-k);
+	media_sqx = media_sqx/(n-k);
 
 	numerador = media - media_x;
 	denominador = media_sqx - media_x;
