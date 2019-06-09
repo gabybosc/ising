@@ -6,22 +6,23 @@
 #define N 32
 #define B 0.0
 //#define J 0.01
-#define SIZE 100000000
+#define SIZE 400000000
 
 int poblar(int *red);
 int flipear(int *red, int *magnetizacion, float J);
 int imprimir(int *red);
 int sumar_sj(int *red, int i);
-int energia_interaccion(int *red, float *energia, float J);
+//int energia_interaccion(int *red, float *energia, float J);
 float func_corr(float *x, int n, int k);
 
 
 //------------MAIN-------------
-int main(){
+int main(){ //(int argc,char *argv[])
 	// Para cada temperatura calculamos los observables para SIZE pasos correlacionados
+	// Guarda un txt que devuelve la correlacion ya promediada 
 	srand(time(NULL));
 	clock_t tic = clock();
-
+	
 	FILE *fp;
 	int *red, *magnetizacion, i,l,k;
 	//float *energia;
@@ -29,42 +30,43 @@ int main(){
 	red = (int*)malloc(N*N*sizeof(int));
 	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	//energia = malloc(SIZE* sizeof(float));
-
+	
 	int k_max = 300; //NOTA: Esto no es k, es k per site: (k/(N*N))
 	correlacion = malloc(k_max* sizeof(float));
-
+	
 	//correlacion sobre tiras de longitud n_tira (luego de pasos de termalizacion)
-	int n_tira = 1000000;
+	int n_tira = 4000000;
 	int termalizacion = 20000;
 	int cant_tiras = (SIZE-termalizacion)/n_tira;
 	float *x;
 	x = malloc(n_tira * sizeof(float));
-
+	
 	float J;
-
+	
 	char fn[50];
-	sprintf(fn,"ising_correlacion_Js.txt");
+	sprintf(fn,"ising_correlacion_Jcrit.txt");
 	fp = fopen(fn, "w");
-	fprintf(fp, "B = %f; J en 0.1 - 0.3; cadena %d, term %d, %d tiras de %d pasos, kps_max %d\n",B,SIZE,termalizacion,cant_tiras,n_tira,k_max);
+	fprintf(fp, "B %f; J [0.4; 0.65]; cadena %d, term %d, %d tiras de %d pasos, kps_max %d\n",B,SIZE,termalizacion,cant_tiras,n_tira,k_max);
 	fprintf(fp, "Para cada J, C(k) para magnetizacion\n");
 
-	for (J=0.1; J<0.4; J+=0.1){
+	for (J=0.4; J<0.65; J+=0.05){//loop J
 		poblar(red);
-
+		
 		for (l = 0; l < N*N; l++){
 			*magnetizacion=0;
 		} //set magnetizacion en 0
+		
 		for (l = 0; l < N*N; l++){
 			*magnetizacion += *(red+l);
 		} //calculo magnetizacion total del primer estado
-
+		
 		//energia_interaccion(red, energia, J); //energia de interaccion del primer estado
 		//*energia = *energia - B * *(magnetizacion); // le sumo la energia del campo B
 
 		// OJO: en correlacion, funcion flipear cambia para guardar todos los pasos
 		flipear(red, magnetizacion, J);
-
-
+		
+		
 		for (k=0; k<k_max; k++){
 			*(correlacion+k) = 0;
 		}//set correlacion a 0
@@ -83,34 +85,13 @@ int main(){
 			fprintf(fp, "%f ",*(correlacion+k));
 		}//k loop para imprimir correlacion
 		fprintf(fp, "\n");
-
-		/*
-		for (k=0; k<k_max; k++){
-			*(correlacion+k) = 0;
-		}//set correlacion a 0
-		for (i=0; i<(cant_tiras-1); i++){
-			for (l=0; l<n_tira; l++){ //armo la tira corta
-				*(x+l) = *(energia + termalizacion + i*n_tira + l);
-			}
-			for (k=0; k<k_max; k++){ //para cada tira corta, calculo la correlacion para todos los k
-				*(correlacion+k) += func_corr(x,n_tira,k*N*N); //calculo la correlacion moviendome de a N*N sitios
-			}
-		}//loop de sobre las tiras
-		for (k=0; k<k_max; k++){
-			*(correlacion+k) = *(correlacion+k)/(cant_tiras-1);
-		}//hago el promedio
-		for(k=0; k<k_max; k++){
-			fprintf(fp, "%f ",*(correlacion+k));
-		}//k loop para imprimir correlacion
-		fprintf(fp, "\n");
-		*/
 	}//end loop J
-
+	
 	free(red);
 	free(magnetizacion);
 	//free(energia);
 	free(correlacion);
-	free(x_e);
+	free(x);
 	fclose(fp);
 	clock_t toc = clock();
 	printf("Duracion: %f segundos (%f minutos)\n", (double)(toc - tic) / CLOCKS_PER_SEC,(double)(toc - tic) / (CLOCKS_PER_SEC*60));
@@ -187,7 +168,7 @@ int flipear(int *red, int *magnetizacion, float J){ //hacerlo de forma secuencia
 		si = *(red+i);
 		sum_sj = sumar_sj(red, i);
 
-		delta_E = 2 * J *si * sum_sj;
+		delta_E = 2 * si * (J * sum_sj + B);
 		P = exp(-delta_E); //proba de aceptar
 
 		if(delta_E < 0){
@@ -197,8 +178,7 @@ int flipear(int *red, int *magnetizacion, float J){ //hacerlo de forma secuencia
 		else if(random < P){
 			*(red+i) = -si;
 			delta_mag -= 2*si;
-		}
-		else{ //revisar esto! Si no flipea, no cambia la energia ni la magnetizacion
+		}else{ //revisar esto! Si no flipea, no cambia la energia ni la magnetizacion
 			//delta_mag = 0;
 			delta_E = 0;
 		}
@@ -220,7 +200,7 @@ int imprimir(int *red){
 		}
 return 0;
 }
-
+/*
 int energia_interaccion(int *red, float *energia, float J){
 	//calculo de energia de interaccion
 	float hamiltoniano = 0;
@@ -230,10 +210,9 @@ int energia_interaccion(int *red, float *energia, float J){
 		hamiltoniano += *(red+i) * sumar_sj(red, i);
 	}
 	*energia = - J * hamiltoniano / 2;
-	// printf("hamilt = %f\n", *energia);
 	return(0);
 }
-
+*/
 
 float func_corr(float *x, int n, int k){
 	//x es la cadena de markov de longitud n
@@ -242,17 +221,17 @@ float func_corr(float *x, int n, int k){
 	float media_x = 0;
 	float media_sqx = 0;
 	float numerador,denominador;
-
+	
 	for (i=0; i<(n-k); i++){
 		media += *(x+i+k) * *(x+i); //valor medio de x(i)*x(i+k)
 		media_x += *(x+i); 		// valor medio de x
 		media_sqx += pow(*(x+i),2); //valor medio de x^2
-	}//cierra el loop en i
+	}
 	media = media/(n-k);
 	media_x = media_x/(n-k);
 	media_x = pow(media_x,2);	// OJO! Ahora media_x es (mean(x))**2
 	media_sqx = media_sqx/(n-k);
-
+	
 	numerador = media - media_x;
 	denominador = media_sqx - media_x;
 
