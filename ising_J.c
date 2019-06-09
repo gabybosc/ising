@@ -3,11 +3,11 @@
 #include <math.h>
 #include <time.h>
 
-#define N 5
+#define N 32
 #define B 0
 #define J 0.1
-#define PASO 1
-#define SIZE 5
+#define PASO 10000
+#define SIZE 10000
 
 int poblar(int *red);
 int flipear(int *red, int *magnetizacion, float *energia);
@@ -19,7 +19,8 @@ int calculo_energia(int *red, float *energia);
 //------------MAIN-------------
 int main(){
 	// Para cada temperatura calculamos los observables para SIZE pasos descorrelacionados
-	// FILE *fp;
+	FILE *fp;
+	char fn[30];
 	int *red, *magnetizacion, j;
 	float *energia;
 	red = (int*)malloc(N*N*sizeof(int));
@@ -28,23 +29,21 @@ int main(){
 	srand(time(NULL));
 
 	poblar(red);
-	// printf("Red inicial:\n");
-	// imprimir(red);
-
 	calculo_energia(red, energia);
 
 	for (j = 0; j < N*N; j++){
 		*magnetizacion += *(red+j);
-	}
+	}//cierra el loop en j
 
 	flipear(red, magnetizacion, energia);
-	// printf("Red nueva:\n");
-	// imprimir(red);
-	printf("\nMag\tEnergia\n");
+
+	sprintf(fn,"ising_J.txt");
+	fp = fopen(fn, "w"); //"a" es append, mientras que "w" sobreescribe
+	fprintf(fp,"m\t\t\t\tu");
+
 	for(j = 0; j<SIZE; j++){
-		printf("%d\t%f\n", *(magnetizacion+j), *(energia+j));
-	}
-	// printf("\n");
+		fprintf(fp,"%d\t%f\n", *(magnetizacion+j), *(energia+j));
+	}//cierra el loop en j para printear
 
 	free(red);
 	free(magnetizacion);
@@ -163,7 +162,7 @@ int calculo_energia(int *red, float *energia){
 
 	for(i = 0; i < N*N; i++){
 		hamiltoniano += *(red+i) * sumar_sj(red, i);
-	}
+	}//cierra el loop en i
 	*energia = - J * hamiltoniano / 2;
 	// printf("hamilt = %f\n", *energia);
 	return(0);
@@ -176,17 +175,17 @@ float func_corr(float *x, int k){
 	float media_x = 0;
 	float media_sqx = 0;
 	float numerador,denominador;
-	
+
 	for (i=0; i<(SIZE-k); i++){
 		media = media + (*(x+i+k) * *(x+i)); //valor medio de x(i)*x(i+k)
 		media_x = media_x + *(x+i); 		// valor medio de x
 		media_sqx = media_sqx + pow(*(x+i),2); //valor medio de x^2
-	}
+	}//cierra el loop en i
 	media = media/(SIZE-k);
 	media_x = media_x/(SIZE-k);
 	media_x = pow(media_x,2);	// OJO! Ahora media_x es (mean(x))**2
 	media_sqx = media_sqx/(SIZE-k);
-	
+
 	numerador = media - media_x;
 	denominador = media_sqx - media_x;
 

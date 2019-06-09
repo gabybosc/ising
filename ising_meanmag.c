@@ -20,34 +20,35 @@ int main(){
 	FILE *fp;
 	char fn[30];
 	int *red, *magnetizacion, j, j_min;
-	float mean_mag,B;
+	float mean_mag,B, energia_sitio;
 	red = (int*)malloc(N*N*sizeof(int));
 	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	srand(time(NULL));
 	j_min = TERM/(PASO*N*N);
-	
+
 	sprintf(fn,"magnetizacion_vs_B.txt");
 	fp = fopen(fn, "w"); //"a" es append, mientras que "w" sobreescribe
 	fprintf(fp,"Delta_iteraciones=%d**2*%d\tJ=%d\n",N,PASO,J);
-	fprintf(fp,"B\tm");
-	
+	fprintf(fp,"B\t\t\t\t\tm\t\t\t\t\tu");
+
 	for (B = 0.2; B <5; B+=0.2){
 		poblar(red);
 		*magnetizacion = 0;
 		for (j = 0; j < N*N; j++){
 			*magnetizacion += *(red+j);
-		}
-		
+		}//cierra el loop en j
+
 		flipear(red, magnetizacion, B);
-		
+
 		mean_mag = 0;
 		for(j = j_min; j<SIZE; j++){
 			mean_mag += *(magnetizacion+j);
-		}
+		} //cierra el loop en j
 		mean_mag = mean_mag/((SIZE-j_min)*N*N);
-		fprintf(fp,"\n%f\t%f",B,mean_mag);
+		energia_sitio = -B * mean_mag;
+		fprintf(fp,"\n%f\t%f\t%f",B,mean_mag, energia_sitio);
 		// ham = -B * (float)s/PASO;
-	}
+	} // cierra el loop en B
 	free(red);
 	free(magnetizacion);
 return 0;
@@ -101,6 +102,7 @@ int flipear(int *red, int *magnetizacion, float B){
 
 return 0;
 }
+
 
 int imprimir(int *red){
 //para mostrar la red creada
