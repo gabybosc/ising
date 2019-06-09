@@ -27,16 +27,16 @@ int main(){
 	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	energia = malloc(SIZE* sizeof(float));
 	srand(time(NULL));
-	
+
 	float *correlacion;
 	correlacion = malloc(30* sizeof(float)); // correlacion para k=0:30
-	
+
 	//correlacion sobre 450 tiras de 200 numeros (luego de 10% pasos de termalizacion)
 	int n_tira = 200;
 	int cant_tiras = (SIZE-(SIZE/10))/n_tira;
 	float x_e[n_tira];
 	int x_m[n_tira];
-	
+
 	char fn[50];
 	sprintf(fn,"ising_Jcorrelacion.txt");
 	fp = fopen(fn, "w");
@@ -53,25 +53,25 @@ int main(){
 
 	// OJO: en correlacion, funcion flipear cambia para guardar todos los pasos
 	flipear(red, magnetizacion, energia);
-	
+
 	//printf("Mag i = %d\nMag f = %d\nEi = %f\nEf = %f\n",*magnetizacion,*(magnetizacion+SIZE-1),*energia,*(energia+SIZE-1));
-	
+
 	for(k=0; k<30; k++){//k loop para correlacion
 		*(correlacion+k) = 0;
 		for (l=0; l<cant_tiras;l++){//loop para promediar sobre tiras
 			for (m=0; m<n_tira; m++){
 				x_e[m] = *(energia+(SIZE/10)+l*n_tira+m);
 				//tiras de energia luego de SIZE/10 pasos de termalizacion, de long n_tira
-			}
+			}//cierra el loop en m
 			*(correlacion+k) += func_corr(x_e,k); //hacerlo tambien para x_m?
-		}
+		}//cierra el loop en l
 		*(correlacion+k) = *(correlacion+k)/cant_tiras;
 	}//end loop k
-	
+
 	for(k=0; k<30; k++){//k loop para imprimir correlacion
 		fprintf(fp, "\n%d\t%f",k,*(correlacion+k));
-	}
-	
+	}//cierra el loop para imprimir
+
 	free(red);
 	free(magnetizacion);
 	free(energia);
@@ -202,17 +202,17 @@ float func_corr(float *x, int k){
 	float media_x = 0;
 	float media_sqx = 0;
 	float numerador,denominador;
-	
+
 	for (i=0; i<(SIZE-k); i++){
 		media = media + (*(x+i+k) * *(x+i)); //valor medio de x(i)*x(i+k)
 		media_x = media_x + *(x+i); 		// valor medio de x
 		media_sqx = media_sqx + pow(*(x+i),2); //valor medio de x^2
-	}
+	}//cierra el loop en i
 	media = media/(SIZE-k);
 	media_x = media_x/(SIZE-k);
 	media_x = pow(media_x,2);	// OJO! Ahora media_x es (mean(x))**2
 	media_sqx = media_sqx/(SIZE-k);
-	
+
 	numerador = media - media_x;
 	denominador = media_sqx - media_x;
 
