@@ -6,13 +6,13 @@
 #define N 32
 #define B 0.0
 //#define J 0.01
-#define SIZE 100000000
+#define SIZE 400000000
 
 int poblar(int *red);
 int flipear(int *red, int *magnetizacion, float J);
 int imprimir(int *red);
 int sumar_sj(int *red, int i);
-int energia_interaccion(int *red, float *energia, float J);
+//int energia_interaccion(int *red, float *energia, float J);
 float func_corr(float *x, int n, int k);
 
 
@@ -35,7 +35,7 @@ int main(){ //(int argc,char *argv[])
 	correlacion = malloc(k_max* sizeof(float));
 	
 	//correlacion sobre tiras de longitud n_tira (luego de pasos de termalizacion)
-	int n_tira = 1000000;
+	int n_tira = 4000000;
 	int termalizacion = 20000;
 	int cant_tiras = (SIZE-termalizacion)/n_tira;
 	float *x;
@@ -44,17 +44,18 @@ int main(){ //(int argc,char *argv[])
 	float J;
 	
 	char fn[50];
-	sprintf(fn,"ising_correlacion_Js.txt");
+	sprintf(fn,"ising_correlacion_Jcrit.txt");
 	fp = fopen(fn, "w");
-	fprintf(fp, "B = %f; J en 0.1 - 0.3; cadena %d, term %d, %d tiras de %d pasos, kps_max %d\n",B,SIZE,termalizacion,cant_tiras,n_tira,k_max);
+	fprintf(fp, "B %f; J [0.4; 0.65]; cadena %d, term %d, %d tiras de %d pasos, kps_max %d\n",B,SIZE,termalizacion,cant_tiras,n_tira,k_max);
 	fprintf(fp, "Para cada J, C(k) para magnetizacion\n");
 
-	for (J=0.1; J<0.4; J+=0.1){
+	for (J=0.4; J<0.65; J+=0.05){//loop J
 		poblar(red);
-
+		
 		for (l = 0; l < N*N; l++){
 			*magnetizacion=0;
 		} //set magnetizacion en 0
+		
 		for (l = 0; l < N*N; l++){
 			*magnetizacion += *(red+l);
 		} //calculo magnetizacion total del primer estado
@@ -84,27 +85,6 @@ int main(){ //(int argc,char *argv[])
 			fprintf(fp, "%f ",*(correlacion+k));
 		}//k loop para imprimir correlacion
 		fprintf(fp, "\n");
-		
-		/*
-		for (k=0; k<k_max; k++){
-			*(correlacion+k) = 0;
-		}//set correlacion a 0
-		for (i=0; i<(cant_tiras-1); i++){
-			for (l=0; l<n_tira; l++){ //armo la tira corta
-				*(x+l) = *(energia + termalizacion + i*n_tira + l);
-			}
-			for (k=0; k<k_max; k++){ //para cada tira corta, calculo la correlacion para todos los k
-				*(correlacion+k) += func_corr(x,n_tira,k*N*N); //calculo la correlacion moviendome de a N*N sitios
-			}
-		}//loop de sobre las tiras
-		for (k=0; k<k_max; k++){
-			*(correlacion+k) = *(correlacion+k)/(cant_tiras-1);
-		}//hago el promedio
-		for(k=0; k<k_max; k++){
-			fprintf(fp, "%f ",*(correlacion+k));
-		}//k loop para imprimir correlacion
-		fprintf(fp, "\n");
-		*/
 	}//end loop J
 	
 	free(red);
@@ -220,7 +200,7 @@ int imprimir(int *red){
 		}
 return 0;
 }
-
+/*
 int energia_interaccion(int *red, float *energia, float J){
 	//calculo de energia de interaccion
 	float hamiltoniano = 0;
@@ -232,6 +212,7 @@ int energia_interaccion(int *red, float *energia, float J){
 	*energia = - J * hamiltoniano / 2;
 	return(0);
 }
+*/
 
 float func_corr(float *x, int n, int k){
 	//x es la cadena de markov de longitud n
