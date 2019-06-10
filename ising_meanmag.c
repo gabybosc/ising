@@ -7,8 +7,8 @@
 #define N 32 	// lado de la red
 #define J 0 	// interaccion entre particulas
 #define PASO 1 	// descorrelacion: PASO*SIZE*N^2
-#define SIZE 10000 	// tamanio de vectores diezmados
-#define TERM 10000	// pasos de termalizacion
+#define SIZE 400000000 	// tamanio de vectores diezmados
+#define TERM 20000	// pasos de termalizacion
 
 int poblar(int *red);
 int flipear(int *red, int *magnetizacion, float B);
@@ -17,6 +17,7 @@ int imprimir(int *red);
 //------------MAIN-------------
 int main(){
 	// Para cada temperatura (o B) calculamos la magnetizacion para SIZE pasos descorrelacionados
+	clock_t tic = clock();
 	FILE *fp;
 	char fn[30];
 	int *red, *magnetizacion, j, j_min;
@@ -49,8 +50,13 @@ int main(){
 		fprintf(fp,"\n%f\t%f\t%f",B,mean_mag, energia_sitio);
 		// ham = -B * (float)s/PASO;
 	} // cierra el loop en B
+
 	free(red);
 	free(magnetizacion);
+
+	clock_t toc = clock();
+	printf("\a Duracion: %f segundos (%f minutos)\n", (double)(toc - tic) / CLOCKS_PER_SEC,(double)(toc - tic) / (CLOCKS_PER_SEC*60));
+
 return 0;
 }
 //
