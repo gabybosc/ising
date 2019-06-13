@@ -4,10 +4,12 @@
 #include <time.h>
 
 
+
 int poblar (int *red, float p, int dim);
 int contornos(int *red, int dim);
 int conteo(int *red, int dim);
 int flipeo(int *red, int dim, float Be, float Jo);
+int imprimir(int *red,int dim);
 int vecinos(int *red,int dim, int i, int j);
 
 
@@ -17,15 +19,14 @@ int main(int argc,char*argv[])
   int dim, i,k,j, it=1000000000,terma=1000;
 
   int *red;
-  FILE *magne;
   int *mag, *pasos;
   float *mik,*rho;
+  FILE *magne;
 
 
   time_t current_time0, current_timef;
   char *c_time_string0, *c_time_stringf ;
 
-  sscanf(argv[1],"%d",& dim);           //Busca el primero de los argumentos y lo usa como dim.
 
   current_time0 = time(NULL);
 
@@ -35,7 +36,9 @@ int main(int argc,char*argv[])
   printf("Hora de inicio: %s", c_time_string0);
 
 
-  dim = dim + 2;
+
+
+  dim = 32;
 
 
   srand(time(NULL));
@@ -55,61 +58,71 @@ int main(int argc,char*argv[])
   for (i=1;i<it;i++)
   {
     *(mag+i)=0;
-  }//inicializan el mag a 0
+  }
 
   for (i=0;i<100;i++)
   {
     *(mik+i)=0.0;
-  }//inicializan el mik a cero
+  }
 
 
-  for(Jo=0.43;Jo<0.44;Jo+=0.01) //barrido en j cerca de jcrit
+  //printf("%d\n",mag);
+  for(Jo=0.43;Jo<0.44;Jo+=0.01)
   {
     fprintf(magne,"%f\n", Jo);
-    for (i=0; i<it;i++) //barrido en iteraciones
-    { flipeo(red, dim, Be, Jo);
-      contornos(red,dim);
-      if(i>terma)
-      {
-          *(mag+i-terma) = conteo(red,dim);
+    for (i=0; i<it;i++)
+      { flipeo(red, dim, Be, Jo);
+        contornos(red,dim);
+        if(i>terma)
+        {
+            *(mag+i-terma) = conteo(red,dim);
+        }
+
+
+
+        //imprimir(red,dim);
+        //printf("%d\n", mag);
+        /*if((i>1000))// && (i%((dim-2)*(dim-2))==0))
+          {
+            fprintf(magne, "%i %i\n", i, mag);
+          }*/
+
+	if(i%10000000==0)
+	{
+	  printf("Voy por %i por ciento.\n",i/10000000);
+	}
       }
 
-  	if(i%10000000==0)
-  	{
-  	  printf("Voy por %i por ciento.\n",i/10000000);
-  	}
-    }//end loop i
-
-  }//end loop Jo cerca de Jcrit
+  }
 
   for (i=0;i<100;i++)
   {
     *(pasos+i)=i*300;
-  }//end loop i
+  }
 
 
 
 
-  for (i=0;i<it;i++)
-  {
-    mm+=*(mag+i);
-  }//end loop i
+for (i=0;i<it;i++)
+{
+  mm+=*(mag+i);
+}
 
-  mm/=(it-terma);
-
-
-
-  mm=mm*mm;
+mm/=(it-terma);
 
 
-  //printf("%f",mm);
 
-  for(i=0;i<it;i++)
-  {
-    mm2+=*(mag+i) * *(mag+i);
-  }//end loop i
+mm=mm*mm;
 
-  mm2/=(it-terma);
+
+//printf("%f",mm);
+
+for(i=0;i<it;i++)
+{
+  mm2+=*(mag+i) * *(mag+i);
+}
+
+mm2/=(it-terma);
 
 
 
@@ -119,29 +132,60 @@ int main(int argc,char*argv[])
     for(j=0;j<it;j++)
     {
     *(mik+k)+= *(mag+j) * *(mag+j+k);
-    }//end loop j
-  }//end loop k
+    }
+  }
 
 
 
   for(k=0;k<100;k++)
   {
     *(mik+k)/=(it-terma-*(pasos+k));
-  }//end loop k
-
-
-
-  for (i=0;i<100;i++)
-  {
-    *(rho+i) = (*(mik+i) - mm)/(mm2-mm);
-  }//end loop i
-
-
-  for (i=0;i<100;i++)
-  {
-    fprintf(magne,"%i %f\n",*(pasos+i),*(rho+i));
   }
 
+
+  /*for(k=0;k<100;k++)
+  {
+    *(mik+k)-=- *(mvik+k);
+  }*/
+
+
+
+for (i=0;i<100;i++)
+{
+  *(rho+i) = (*(mik+i) - mm)/(mm2-mm);
+}
+
+
+for (i=0;i<100;i++)
+{
+  fprintf(magne,"%i %f\n",*(pasos+i),*(rho+i));
+}
+
+
+//imprimir(red,dim);
+
+  /*p=0.99;
+
+  poblar(red, p, dim);
+  contornos(red,dim);
+  //imprimir(red,dim);
+  mag = conteo(red, dim);
+  //printf("%d\n",mag);
+
+  for(Jo=0.31;Jo<0.6;Jo+=0.01)
+  {
+    fprintf(magne,"%f\n", Jo);
+    for (i=0; i<it;i++)
+      { flipeo(red, dim, Be, Jo);
+        mag = conteo(red,dim);
+        //printf("%d\n",mag);
+        contornos(red,dim);
+        if((i>((dim-2)*(dim-2)*100)))// && (i%((dim-2)*(dim-2))==0))
+          {
+            fprintf(magne, "%i %i\n", i, mag);
+          }
+        }
+  }*/
 
 
   //printf("%i\n", mag);
@@ -275,4 +319,19 @@ int vecinos(int *red,int dim, int i, int j)
 
   return index;
 
+}
+
+
+int imprimir(int *red, int dim)         //Imprime una fila debajo de la otra.
+{ int i,j;
+
+  for (i=0;i<dim;i++)
+    {for (j=0;j<dim;j++)
+      {
+      printf("%02d ", *(red+dim*i+j));
+      }
+    printf("\n");
+    }
+
+  return 0;
 }
