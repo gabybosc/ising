@@ -7,7 +7,7 @@
 #define N 32 	// lado de la red
 #define J 0 	// interaccion entre particulas
 #define PASO 1 	// descorrelacion: PASO*SIZE*N^2
-#define SIZE 400000000 	// tamanio de vectores diezmados
+#define SIZE 4000000 	// tamanio de vectores diezmados
 #define TERM 20000	// pasos de termalizacion
 
 int poblar(int *red);

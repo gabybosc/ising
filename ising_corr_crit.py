@@ -23,3 +23,12 @@ plt.legend()
 plt.grid()
 
 plt.show()
+
+datos = np.loadtxt('magnetizacion_vs_B.txt', skiprows=2)
+B = datos[:,0]
+m = datos[:,1]
+u = datos[:,2]
+
+plt.plot(B,m/(-20), label='mag')
+plt.plot(B,u/100, label='energia')
+plt.legend()
