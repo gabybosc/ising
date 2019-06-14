@@ -3,11 +3,16 @@
 #include <math.h>
 #include <time.h>
 
-//#define B 20 	// campo magnetico
+#define B 1 	// campo magnetico
 #define N 32 	// lado de la red
 #define J 0 	// interaccion entre particulas
+<<<<<<< HEAD
 #define PASO 1 	// descorrelacion: PASO*SIZE*N^2
 #define SIZE 4000000 	// tamanio de vectores diezmados
+=======
+#define PASO 10 	// descorrelacion: PASO*SIZE*N^2
+#define SIZE 1000000 	// tamaño de vectores diezmados
+>>>>>>> 630f76f8c2c57ed882d28f93f0857c34310e4647
 #define TERM 20000	// pasos de termalizacion
 
 int poblar(int *red);
@@ -21,25 +26,25 @@ int main(){
 	FILE *fp;
 	char fn[30];
 	int *red, *magnetizacion, j, j_min;
-	float mean_mag,B, energia_sitio;
+	float mean_mag, beta, energia_sitio;
 	red = (int*)malloc(N*N*sizeof(int));
 	magnetizacion = (int*)calloc(SIZE, sizeof(int));
 	srand(time(NULL));
 	j_min = TERM/(PASO*N*N);
 
-	sprintf(fn,"magnetizacion_vs_B.txt");
+	sprintf(fn,"magnetizacion_vs_temp.txt");
 	fp = fopen(fn, "w"); //"a" es append, mientras que "w" sobreescribe
 	fprintf(fp,"Delta_iteraciones=%d**2*%d\tJ=%d\n",N,PASO,J);
-	fprintf(fp,"B\t\t\t\t\tm\t\t\t\t\tu");
+	fprintf(fp,"beta\t\t\t\t\tm\t\t\t\t\tu");
 
-	for (B = 0.2; B <5; B+=0.2){
+	for (beta = 0.2; beta <5; beta+=0.2){ //loop en temperaturas
 		poblar(red);
 		*magnetizacion = 0;
 		for (j = 0; j < N*N; j++){
 			*magnetizacion += *(red+j);
 		}//cierra el loop en j
 
-		flipear(red, magnetizacion, B);
+		flipear(red, magnetizacion, beta);
 
 		mean_mag = 0;
 		for(j = j_min; j<SIZE; j++){
@@ -47,9 +52,8 @@ int main(){
 		} //cierra el loop en j
 		mean_mag = mean_mag/((SIZE-j_min)*N*N);
 		energia_sitio = -B * mean_mag;
-		fprintf(fp,"\n%f\t%f\t%f",B,mean_mag, energia_sitio);
-		// ham = -B * (float)s/PASO;
-	} // cierra el loop en B
+		fprintf(fp,"\n%f\t%f\t%f",beta,mean_mag, energia_sitio);
+	} // cierra el loop en beta
 
 	free(red);
 	free(magnetizacion);
