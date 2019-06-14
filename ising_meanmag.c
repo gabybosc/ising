@@ -3,15 +3,15 @@
 #include <math.h>
 #include <time.h>
 
-#define B 1 	// campo magnetico
+#define B 1.0 	// campo magnetico
 #define N 32 	// lado de la red
 #define J 0 	// interaccion entre particulas
 #define PASO 10 	// descorrelacion: PASO*SIZE*N^2
-#define SIZE 1000000 	// tamaño de vectores diezmados
+#define SIZE 100000 	// tamaño de vectores diezmados
 #define TERM 20000	// pasos de termalizacion
 
 int poblar(int *red);
-int flipear(int *red, int *magnetizacion, float B);
+int flipear(int *red, int *magnetizacion, float beta);
 int imprimir(int *red);
 
 //------------MAIN-------------
@@ -78,7 +78,7 @@ return 0;
 }
 
 
-int flipear(int *red, int *magnetizacion, float B){
+int flipear(int *red, int *magnetizacion, float beta){
 //flipea un s_inicial a un s_final. Si la energía baja, lo acepta. Si aumenta, lo acepta con una proba P.
 	int si,i,j,l; //si = s en el lugar i
 	float P, random;
@@ -90,7 +90,7 @@ int flipear(int *red, int *magnetizacion, float B){
 			random = (float)rand()/(float)RAND_MAX;
 			i = ((float)rand()/(float)RAND_MAX)* N*N;
 			si = *(red+i);
-			delta_E = 2 * B *si;
+			delta_E = 2 * beta * B *si;
 			P = exp(-delta_E); //proba de aceptar
 
 			if(delta_E < 0){
