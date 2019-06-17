@@ -20,7 +20,7 @@ int main(){
   int N, i, m;
   double xi, xf, delta_x, random, p, delta; //xi es inicial y xf es final
   double *serie;
-  N = 20000;
+  N = 100000;
   delta = 3;
   srand(time(NULL));
   // delta = 5;
@@ -31,7 +31,7 @@ int main(){
 
 
 	char fn[100];
-	sprintf(fn,"/home/gabybosc/computacional/datos/importance_sampling_integral.txt");
+	sprintf(fn,"importance_sampling_integral.txt");
 	fp = fopen(fn, "w");
 
 

@@ -1,25 +1,26 @@
-import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import os
 path = os.getcwd()
-import numpy as np
-from matplotlib import cm
 
-df = pd.read_csv(path+'\\ising_correlacion_Js.txt',header=None,sep=' ',skiprows=2)
+# sirve para graficar los resultados de correlacion*.txt de ising_corr*.c
 
-J = np.arange(0.1,0.35,0.1)
+datos = pd.read_csv(path+"/correlacionJ06.txt",sep=" ",skiprows=2,header=None)
+#datos = pd.read_csv(path+"/correlacionB.txt",sep=" ",skiprows=2,header=None)
+#metadata = pd.read_csv(path+"/correlacionB.txt",nrows=1,sep=" ",header=None)
 
-#m = cm.ScalarMappable(norm=None, cmap='gist_rainbow')
-#colores = m.to_rgba(np.arange(0.1,1.4,0.1)/1.4)
-#colores = m.to_rgba(J/max(J))
+BJ = np.array(datos[0])
+N = np.arange(0,len(datos.iloc[0,1:]),1024) # el paso es de N*N con N=32 (ver metadata)
 
-for i in range(len(J)):
-	plt.plot(df.iloc[i,:],label='J={0:.1f}'.format(J[i]))#,c=colores[i])
-plt.xlabel('Pasos por sitio ($k/L^2$)')
-plt.ylabel('C')
-plt.title('Correlacion para magnetizacion')
-#plt.ylim([-1,1])
+plt.figure(1)
+for i,valor in enumerate(BJ):
+    #if i%2: # si no quiero graficar todos
+	plt.plot(abs(datos.iloc[i,1:]),label=valor)
+plt.xlabel(r'Iteraciones ($\times1000$)')
+plt.ylabel('mag por sitio |m|')
 plt.legend()
+#plt.ylim([0,1])
 plt.grid()
-
+#plt.savefig('terma_mag_sitio.png',dpi=150)
 plt.show()

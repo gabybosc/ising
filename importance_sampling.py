@@ -1,10 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from funciones import find_nearest, func_corr
-from scipy.integrate import simps, trapz
+#from scipy.integrate import simps, trapz
 plt.ion()
+import os
+path = os.getcwd()
 
-datos = np.loadtxt('../../computacional/datos/importance_sampling_deltas_0_10.txt', skiprows=2)
+datos = np.loadtxt(path+'\\importance_sampling_deltas_0_10.txt', skiprows=2)
 delta = datos[:,0]
 paso_delta = np.abs(delta[0] - delta[1])
 n_serie = len(datos[0,:])-1
@@ -23,12 +25,14 @@ idx = np.where(aceptacion == find_nearest(aceptacion, 50))[0][0] #donde la acpet
 plt.figure(1)
 plt.plot(delta, aceptacion)
 plt.plot(delta[idx],aceptacion[idx],'ro',label='$\delta$ = {}'.format(delta[idx]))
-plt.xlabel('$\delta$')
-plt.ylabel('% aceptacion')
-plt.title('Aceptación para un paso entre deltas de {}'.format(paso_delta))
+plt.xlabel('paso de exploración $\delta$')
+plt.ylabel('porcentaje de aceptación')
+plt.title('Aceptación de la muestra variando $\delta$ en {}'.format(paso_delta))
 plt.ylim([0,100])
 plt.legend()
 plt.grid()
+#plt.savefig('aceptacion_delta.png',dpi=150)
+plt.show()
 
 
 # Funcion correlacion para algunos deltas
@@ -57,12 +61,14 @@ for indice in np.arange(ni,nf,int(round((nf-ni)/n_deltas))): # loop para algunos
             corr = func_corr(x, k)
             ck[i] = ck[i] + corr
     ck_mean = ck/((fin-inicio)/paso)
-    plt.plot(ks, ck_mean, label='delta = {}'.format(delta[indice]))
-plt.xlabel('k')
-plt.ylabel('C(k)')
-plt.title('Correlacion')
+    plt.plot(ks, ck_mean, label='$\delta$ = {}'.format(delta[indice]))
+plt.xlabel('distancia k\n(pasos en cadena de Markov)')
+plt.ylabel('correlación C(k)')
+plt.title('Funcion correlación para distintos valores de $\delta$')
 plt.legend()
 plt.grid()
+plt.savefig('correlacion_sampling.png',dpi=150)
+plt.show()
 
 # x_N = datos[idx,1:]
 # # para cada delta, separar la tira de x en tiras mas cortas y hacer un promedio sobre ellas
@@ -77,34 +83,47 @@ plt.grid()
 
 
 # Calculo de la integral (Creo que debe dar sqrt(2pi) )
-datos_integral = np.loadtxt('../../computacional/datos/importance_sampling_integral.txt')
-k = 3
-for k in [1,4]:
-    x_diezmado = np.array([datos_integral[k*i] for i in range(int(len(datos_integral)/k))])
-
-    tamanios = np.linspace(1000, len(x_diezmado), 10)
-    tamanios = np.array([int(tamanio) for tamanio in tamanios])
-    termal = range(0, 900, 100)
-    matriz = np.zeros((len(tamanios), len(termal)))
-    plt.figure()
-    for i,N in enumerate(tamanios):
-        for j,term in enumerate(termal):
-            x = x_diezmado[term:N]
-            # x.sort()
-            # y = x**2 * np.exp(-x**2/2)
-            # I = trapz(y,x)- np.sqrt(2*np.pi)
-            I = np.sum(x**2)/len(x) - 1
-            matriz[i,j] = I
-        plt.plot(termal,matriz[i,:],label=tamanios[i])
-    plt.xlabel('pasos de termalizacion')
-    plt.ylabel('Integral - 1')
-    plt.ylim([-0.05, 0.05])
-    plt.title('para diezmar con k = {}'.format(k))
-    plt.legend()
+datos_integral = np.loadtxt(path+'\\importance_sampling_integral.txt')
+#k = 3
 
 """si hacemos esto pero sin diezmar los x, nos da mal, creemos que es instructivo poner el grafiquito malo para mostrar que efectivamente cambia si no consideramos la correlacion."""
+# OJO! Usar los tamanios que determina el x_diezmado por k=4 (sino, las cadenas de k=1 tienen otros tamanios y no son comparables)
 
-    # print('Si hacemos la integral, nos da I - 2pi = {}'.format(trapz(y,x)- np.sqrt(2*np.pi)))
-    # print('Si sumamos, nos da I - 2pi = {}'.format(np.sum(x**2)/len(x) - 1))
-# que se usa como dx??? opcion: ordenar el vector x y usar diferencias entre pasos consecutivos
-#dx = delta[idx]
+x_diezmado = np.array([datos_integral[4*i] for i in range(int(len(datos_integral)/4))]) #k=4
+
+tamanios = np.linspace(1000, len(x_diezmado), 10)
+tamanios = np.array([int(tamanio) for tamanio in tamanios])
+termal = range(0, 900, 100)
+matriz = np.zeros((len(tamanios), len(termal)))
+
+for j,term in enumerate(termal):
+	for i,N in enumerate(tamanios):
+		x = x_diezmado[term:N]
+		I = np.sum(x**2)/len(x) - 1
+		matriz[i,j] = I
+	plt.plot(tamanios,matriz[:,j],label=termal[j])
+plt.xlabel('tamaño de la cadena')
+plt.ylabel('$<x^2>$ - 1')
+plt.ylim([-0.12, 0.12])
+plt.title('Cálculo de la integral para k = {}'.format(4))
+plt.legend(loc='upper right')
+plt.grid()
+#plt.savefig('integral_k4.png',dpi=150)
+plt.show()
+
+x_diezmado = np.array([datos_integral[i] for i in range(int(len(datos_integral)))])
+
+for j,term in enumerate(termal):
+	for i,N in enumerate(tamanios):
+		x = x_diezmado[term:N]
+		I = np.sum(x**2)/len(x) - 1
+		matriz[i,j] = I
+	plt.plot(tamanios,matriz[:,j],label=termal[j])
+plt.xlabel('tamaño de la cadena')
+plt.ylabel('$<x^2>$ - 1')
+#plt.ylim([-0.12, 0.12])
+plt.title('Cálculo de la integral para k = {}'.format(1))
+plt.legend(loc='lower right')
+plt.grid()
+#plt.savefig('integral_k1.png',dpi=150)
+plt.show()
