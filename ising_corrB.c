@@ -206,7 +206,6 @@ int energia_interaccion(int *red, float *energia, float J){
 		hamiltoniano += *(red+i) * sumar_sj(red, i);
 	}
 	*energia = - J * hamiltoniano / 2;
-	// printf("hamilt = %f\n", *energia);
 	return(0);
 }
 
