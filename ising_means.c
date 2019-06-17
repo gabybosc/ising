@@ -6,7 +6,7 @@
 #define N 32
 
 int poblar(int *red);
-int flipear(int *red, float *magnetizacion, float *energia, float B, float J, int size, int paso, float beta);
+int flipear(int *red, float *magnetizacion, float *energia, float B, float J, int size, int paso, float temp);
 int sumar_sj(int *red, int i);
 int energia_interaccion(int *red, float *energia, float J);
 float func_corr(float *x, int n, int k);
@@ -20,27 +20,28 @@ int main(){
 	
 	int paso = 1; // paso*N*N pasos entre iteraciones guardadas
 	
-	// media sobre n_tira con termalizacion para cada beta
-	int n_tira = 1000; //corregir
-	int termalizacion = 9000/(N*N) + 1; //porque flipear avanza de a N*N pasos
+	// media sobre n_tira con termalizacion para cada temp
+	int n_tira = 10000; //corregir
+	int termalizacion = 500000/(N*N) + 1; //porque flipear avanza de a N*N pasos
 	
 	float J, B;
 	
 	int *red,l,contador=0;
-	float *energia, *magnetizacion, *mean_mag, *mean_en, *betas, beta;
+	float *energia, *magnetizacion, *mean_mag, *mean_en, *temps, temp;
 	red = (int*)malloc(N*N*sizeof(int));
 	magnetizacion = malloc(n_tira* sizeof(float));
 	energia = malloc(n_tira* sizeof(float));
 	
-	float beta_i = 0.1;
-	float beta_f = 5;
-	float beta_paso = 0.1;
+	float temp_i = 0.1;
+	float temp_f = 4.5;
+	float temp_paso = 0.01;
 	
-	int size_mean = (beta_f - beta_i)/beta_paso;
+	int size_mean = (temp_f - temp_i)/temp_paso;
+	//float porcentaje = temp_paso*100/size_mean;
 	
 	mean_mag = calloc(size_mean, sizeof(float));
 	mean_en = calloc(size_mean, sizeof(float));
-	betas = calloc(size_mean, sizeof(float));
+	temps = calloc(size_mean, sizeof(float));
 	
 	FILE *fp;
 	char fn[50];
@@ -48,13 +49,13 @@ int main(){
 	fp = fopen(fn, "w");
 	
 	fprintf(fp, "term %d, %d pasos de N*N\n",termalizacion,n_tira);
-	fprintf(fp, "beta\tMag\tEn\n");
+	fprintf(fp, "temp\tMag\tEn");
 	
 	poblar(red);
 	
 	B = 0.0;
-	J = 0.1;
-	for (beta=beta_i; beta<beta_f; beta+=beta_paso){//loop temperatura
+	J = 1.0;
+	for (temp=temp_i; temp<temp_f; temp+=temp_paso){//loop temperatura
 		*magnetizacion = 0;
 		for (l = 0; l < N*N; l++){
 			*magnetizacion += *(red+l);
@@ -63,15 +64,15 @@ int main(){
 		energia_interaccion(red, energia, J); //energia de interaccion del primer estado
 		*energia -= B * *magnetizacion; // le sumo la energia del campo B
 
-		flipear(red, magnetizacion, energia, B, J, n_tira, paso, beta);
+		flipear(red, magnetizacion, energia, B, J, n_tira, paso, temp);
 		*(mean_mag+contador) = mean_val(magnetizacion+termalizacion, n_tira-termalizacion,1); //valor medio de magnetizacion
 		*(mean_en+contador) = mean_val(energia+termalizacion, n_tira-termalizacion,0); //valor medio de energia
-		*(betas+contador) = beta;
+		*(temps+contador) = temp;
 		contador++;
 	}//end loop en temperatura
 
 	for(l=0; l<size_mean; l++){
-		fprintf(fp, "%f\t%f\t%f\n",*(betas+l),*(mean_mag+l)/(N*N),*(mean_en+l)/(N*N));
+		fprintf(fp, "\n%f\t%f\t%f",*(temps+l),*(mean_mag+l)/(N*N),*(mean_en+l)/(N*N));
 	}
 
 	free(red);
@@ -79,7 +80,7 @@ int main(){
 	free(energia);
 	fclose(fp);
 	clock_t toc = clock();
-	printf("Duracion: %.2f segundos (%.2f minutos)\a\n", (double)(toc - tic) / CLOCKS_PER_SEC,(double)(toc - tic) / (CLOCKS_PER_SEC*60));
+	printf("\nDuracion: %.2f segundos (%.2f minutos)\a\n", (double)(toc - tic) / CLOCKS_PER_SEC,(double)(toc - tic) / (CLOCKS_PER_SEC*60));
 return 0;
 }
 //
@@ -139,7 +140,7 @@ return sum_sj;
 }
 
 
-int flipear(int *red, float *magnetizacion, float *energia, float B, float J, int size, int paso, float beta){
+int flipear(int *red, float *magnetizacion, float *energia, float B, float J, int size, int paso, float temp){
 //flipea un s_inicial a un s_final. Si la energía baja, lo acepta. Si aumenta, lo acepta con una proba P
 //guarda magnetizacion y energia cada (paso*N*N) pasos
 	int si,i,j,l,sum_sj; //si spin en lugar i, sum_sj suma de vecinos
@@ -156,7 +157,7 @@ int flipear(int *red, float *magnetizacion, float *energia, float B, float J, in
 			si = *(red+i);
 			sum_sj = sumar_sj(red, i);
 			delta_E = 2 * si * (B + J * sum_sj);
-			P = exp(-delta_E/beta); //proba de aceptar
+			P = exp(-delta_E/temp); //proba de aceptar
 
 			if(delta_E < 0){
 				*(red+i) = -si;
