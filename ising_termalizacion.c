@@ -28,13 +28,12 @@ int main(){
 	
 	FILE *fp;
 	char fn[30];
-	sprintf(fn,"termalizacion.txt");
+	sprintf(fn,"termalizacionB.txt");
 	fp = fopen(fn, "w");
 	
 	fprintf(fp,"N%d;paso_iteracion=%d\n",N,paso*N*N);
 	fprintf(fp,"BJ m");
 	
-	/*
 	//loop en B fijando J
 	J=0;
 	for (B = 0.2; B<3; B+=0.2){
@@ -55,8 +54,8 @@ int main(){
 			fprintf(fp," %f", (float)*(magnetizacion+j)/(float)(N*N));
 		}
 	}
-	*/
 	
+	/*
 	//loop en J fijando B
 	B=0;
 	for (J=0.1; J<0.61; J+=0.1){
@@ -78,7 +77,7 @@ int main(){
 			fprintf(fp," %f", (float)*(magnetizacion+j)/(float)(N*N));
 		}
 	}
-	
+	*/
 	free(red);
 	free(magnetizacion);
 	free(energia);
