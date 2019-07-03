@@ -3,7 +3,7 @@
 #include <math.h>
 #include <time.h>
 
-#define B 1.0 	// campo magnetico
+#define B 1 	// campo magnetico
 #define N 32 	// lado de la red
 #define J 0 	// interaccion entre particulas
 #define PASO 10 	// descorrelacion: PASO*SIZE*N^2
@@ -11,7 +11,7 @@
 #define TERM 20000	// pasos de termalizacion
 
 int poblar(int *red);
-int flipear(int *red, int *magnetizacion, float beta);
+int flipear(int *red, int *magnetizacion, float B);
 int imprimir(int *red);
 
 //------------MAIN-------------
@@ -48,7 +48,6 @@ int main(){
 		mean_mag = mean_mag/((SIZE-j_min)*N*N);
 		energia_sitio = -B * mean_mag;
 		fprintf(fp,"\n%f\t%f\t%f",beta,mean_mag, energia_sitio);
-		printf("terminé beta = %f\n", beta);
 	} // cierra el loop en beta
 
 	free(red);
@@ -79,7 +78,7 @@ return 0;
 }
 
 
-int flipear(int *red, int *magnetizacion, float beta){
+int flipear(int *red, int *magnetizacion, float B){
 //flipea un s_inicial a un s_final. Si la energía baja, lo acepta. Si aumenta, lo acepta con una proba P.
 	int si,i,j,l; //si = s en el lugar i
 	float P, random;
@@ -91,7 +90,7 @@ int flipear(int *red, int *magnetizacion, float beta){
 			random = (float)rand()/(float)RAND_MAX;
 			i = ((float)rand()/(float)RAND_MAX)* N*N;
 			si = *(red+i);
-			delta_E = 2 * beta * B *si;
+			delta_E = 2 * B *si;
 			P = exp(-delta_E); //proba de aceptar
 
 			if(delta_E < 0){
